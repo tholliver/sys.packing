@@ -1,0 +1,8 @@
+---
+import SentPage from "@/components/react/sent-page";
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout>
+    <SentPage client:only="react" />
+</DashboardLayout>

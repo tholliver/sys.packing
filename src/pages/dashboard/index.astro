@@ -1,0 +1,33 @@
+---
+import DashboardLayout from "@/layouts/DashboardLayout.astro";
+import { getSession } from "@/auth/dal";
+import Layout from "@/layouts/Layout.astro";
+import DashboardPage from "@/components/react/dashboard-page";
+import { getGeneralStats, getRecentPackages } from "@/db/queries";
+
+const session = await getSession(Astro.request);
+/* const session = () => {
+    if (Astro.locals.session) {
+        return Astro.locals.user;
+    } else {
+        // Redirect to login page if the user is not authenticated
+        return Astro.redirect("/login");
+    }
+};
+*/
+if (!session) {
+    return Astro.redirect("/signin");
+}
+
+const stats = await getGeneralStats();
+const recentPackages = await getRecentPackages(session?.user.id!);
+---
+
+<DashboardLayout>
+    <DashboardPage
+        stats={stats}
+        recentPackages={recentPackages}
+        session={session!}
+        client:load
+    />
+</DashboardLayout>

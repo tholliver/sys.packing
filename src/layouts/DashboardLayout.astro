@@ -1,0 +1,17 @@
+---
+import { DashboardNav } from "@/components/react/dashboard-nav";
+import Layout from "./Layout.astro";
+
+const currentPath = Astro.url.pathname;
+---
+
+<Layout>
+    <DashboardNav pathname={currentPath} client:load />
+    <div class="min-h-screen bg-background">
+        <div class="md:pl-64">
+            <main class="p-4 md:p-8">
+                <slot />
+            </main>
+        </div>
+    </div>
+</Layout>

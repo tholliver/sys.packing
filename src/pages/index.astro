@@ -1,11 +1,220 @@
 ---
-import Welcome from "../components/Welcome.astro";
-import Layout from "../layouts/Layout.astro";
+import { actions } from "astro:actions";
+import Layout from "@/layouts/Layout.astro";
+import { db } from "@/db";
+import { packages } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { format } from "@formkit/tempo";
+import { Clock, Truck, CheckCircle, XCircle } from "lucide-react";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const trackingNumber = Astro.url.searchParams.get("trackingNumber") || ""; // Default to 'all'
+
+const result = Astro.getActionResult(actions.getPackageStatus);
+const packageData = await db.query.packages.findFirst({
+	where: eq(packages.trackingNumber, trackingNumber),
+});
+
+// Mapping config (manually included since no runtime TS)
+const statusConfig = {
+	pending: {
+		icon: Clock,
+		color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+		label: "Pendiente",
+	},
+	in_transit: {
+		icon: Truck,
+		color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+		label: "En Tránsito",
+	},
+	delivered: {
+		icon: CheckCircle,
+		color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+		label: "Entregado",
+	},
+	failed: {
+		icon: XCircle,
+		color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+		label: "Fallido",
+	},
+};
+
+//console.log(packageData);
 ---
 
 <Layout>
-	<Welcome />
+	<div class="container mx-auto px-4 py-8">
+		<header class="text-center mb-8">
+			<h1
+				class="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-2"
+			>
+				Rastreador de Estado de Paquetes
+			</h1>
+			<p class="text-gray-600 dark:text-gray-400">
+				Rastrea tus paquetes en tiempo real
+			</p>
+		</header>
+
+		<!-- Card Form -->
+		<div class="max-w-md mx-auto mb-8">
+			<div
+				class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-6"
+			>
+				<h2
+					class="text-xl font-semibold text-gray-900 dark:text-white mb-4"
+				>
+					Rastrear Tu Paquete
+				</h2>
+				<form
+					method="GET"
+					action={actions.getPackageStatus}
+					class="space-y-4"
+				>
+					<div>
+						<label
+							for="trackingNumber"
+							class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+						>
+							Número de Seguimiento
+						</label>
+						<input
+							type="text"
+							id="trackingNumber"
+							name="trackingNumber"
+							placeholder="Introduce el número de seguimiento (ej. PKG001234567)"
+							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+						/>
+					</div>
+					<button
+						type="submit"
+						class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+					>
+						Rastrear Paquete
+					</button>
+				</form>
+			</div>
+		</div>
+
+		<!-- Result Card -->
+		{
+			packageData
+				? (() => {
+						const pkg = packageData;
+						const status =
+							statusConfig[pkg.status] ?? statusConfig["pending"];
+						const Icon = status.icon;
+
+						return (
+							<div class="max-w-4xl mx-auto">
+								<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-6 space-y-4">
+									<div class="flex items-center space-x-4">
+										<div
+											class={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${status.color}`}
+										>
+											<Icon class="w-4 h-4 mr-1" />
+											{status.label}
+										</div>
+										<span class="text-sm text-gray-500 dark:text-gray-400">
+											Última actualización:{" "}
+											{format(pkg.updatedAt, "full")}
+										</span>
+									</div>
+
+									<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300">
+										<div>
+											<h4 class="font-semibold text-gray-900 dark:text-white">
+												Remitente
+											</h4>
+											<p>{pkg.senderFullName}</p>
+											<p>
+												CI/NIT:{" "}
+												{pkg.senderCINIT ??
+													"No disponible"}
+											</p>
+											<p>
+												Teléfono:{" "}
+												{pkg.senderPhone ??
+													"No disponible"}
+											</p>
+											<p>
+												Oficina:{" "}
+												{pkg.officeSenderAddress}
+											</p>
+										</div>
+										<div>
+											<h4 class="font-semibold text-gray-900 dark:text-white">
+												Destinatario
+											</h4>
+											<p>{pkg.recipientFullName}</p>
+											<p>
+												CI/NIT:{" "}
+												{pkg.recipientCINIT ??
+													"No disponible"}
+											</p>
+											<p>
+												Teléfono:{" "}
+												{pkg.recipientPhone ??
+													"No disponible"}
+											</p>
+											<p>
+												Oficina:{" "}
+												{pkg.officeRecipientAddress}
+											</p>
+										</div>
+										<div>
+											<h4 class="font-semibold text-gray-900 dark:text-white">
+												Detalles del Paquete
+											</h4>
+											<p>
+												Número de Seguimiento:{" "}
+												<span class="font-mono">
+													{pkg.trackingNumber}
+												</span>
+											</p>
+											<p>
+												Descripción:{" "}
+												{pkg.description ??
+													"Sin descripción"}
+											</p>
+											<p>Peso: {pkg.weight} kg</p>
+											<p>Cantidad: {pkg.quantity ?? 1}</p>
+											<p>Tipo: {pkg.packageType}</p>
+											<p>Prioridad: {pkg.priority}</p>
+											<p>
+												¿Frágil?:{" "}
+												{pkg.isFragile ? "Sí" : "No"}
+											</p>
+										</div>
+										<div>
+											<h4 class="font-semibold text-gray-900 dark:text-white">
+												Pago y Entrega
+											</h4>
+											<p>
+												Valor Declarado: Bs.{" "}
+												{pkg.declaredValue ?? "0.00"}
+											</p>
+											<p>
+												Costo Total: Bs. {pkg.totalCost}
+											</p>
+											<p>
+												¿Pagado?:{" "}
+												{pkg.isPaid ? "Sí" : "No"}
+											</p>
+											<p>
+												Entregado por:{" "}
+												{pkg.deliveredBy ?? "Pendiente"}
+											</p>
+											<p>
+												Notas:{" "}
+												{pkg.deliveryNotes ??
+													"Sin notas"}
+											</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						);
+					})()
+				: null
+		}
+	</div>
 </Layout>

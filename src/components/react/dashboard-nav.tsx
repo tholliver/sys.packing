@@ -71,13 +71,15 @@ export function DashboardNav({ pathname }: {
                         <nav className="flex-1 space-y-1 p-3">
                             <NavItems />
                         </nav>
-                        <ModeToggle />
-                        <NavUser
-                            user={{
-                                avatar: session?.user.image!,
-                                email: session?.user.email!,
-                                name: session?.user.name!
-                            }} />
+                        <div className="pb-3 flex flex-col gap-1">
+                            <ModeToggle />
+                            <NavUser
+                                user={{
+                                    avatar: session?.user.image!,
+                                    email: session?.user.email!,
+                                    name: session?.user.name!
+                                }} />
+                        </div>
                     </div>
                 </SheetContent>
             </Sheet>

@@ -21,7 +21,7 @@ export default function SignUpPage() {
 
         if (password !== confirmPassword) {
             toast.error("Error", {
-                description: "Passwords do not match",
+                description: "Las contraseñas no coinciden",
                 icon: <RotateCcwKey />
             })
             return
@@ -45,13 +45,13 @@ export default function SignUpPage() {
                 })
             } else {
                 toast.success("Success", {
-                    description: "Account created successfully",
+                    description: "Sessión iniciada correctamente",
                 })
                 window.location.href = "/dashboard"
             }
         } catch (error) {
             toast.error("Error", {
-                description: "An unexpected error occurred",
+                description: "Ocurrio un error inesperado",
                 icon: <ServerCrash />
             })
         } finally {

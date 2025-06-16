@@ -1,12 +1,33 @@
 ---
 import { DashboardNav } from "@/components/react/dashboard-nav";
 import Layout from "./Layout.astro";
+import { Package } from "lucide-react";
 
 const currentPath = Astro.url.pathname;
 ---
 
 <Layout>
-    <DashboardNav pathname={currentPath} client:load />
+    <div class="">
+        <DashboardNav pathname={currentPath} client:load />
+    </div>
+
+    <!-- Mobile Header Bar - Only visible on mobile -->
+    <div class="md:hidden bg-background border-b sticky top-0 z-40 shadow-sm">
+        <div class="flex items-center justify-between px-4 py-3">
+            <div class="flex items-center gap-3">
+                <!-- The mobile menu button from DashboardNav will appear here -->
+                <div class="flex items-center gap-2">
+                    <Package className="h-6 w-6 text-primary" />
+                    <span class="font-semibold text-foreground"
+                        >Seguimiento de Paquetes</span
+                    >
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <!-- Space for additional header actions like notifications, user avatar, etc. -->
+            </div>
+        </div>
+    </div>
     <div class="min-h-screen bg-background">
         <div class="md:pl-64">
             <main class="p-4 md:p-8">

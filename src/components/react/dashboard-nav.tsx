@@ -1,10 +1,11 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Package, Send, Inbox, BarChart3, Menu, LogOut, Shield } from "lucide-react"
 import { signOut, useSession } from "@/auth/auth-client"
 import { toast } from "sonner"
 import { ModeToggle } from "./mode-toggle"
+import { NavUser } from "./nav-user"
 
 const navigation = [
     { name: "Panel Principal", href: "/dashboard", icon: BarChart3 },
@@ -69,7 +70,13 @@ export function DashboardNav({ pathname }: {
                         <Menu className="h-4 w-4" />
                     </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="w-64 sr-only">
+                <SheetContent side="left" className="w-64">
+                    <SheetHeader>
+                        <SheetTitle className="sr-only">Menú de Navegación</SheetTitle>
+                        <SheetDescription className="sr-only">
+                            Menú principal de navegación con opciones de seguimiento de paquetes
+                        </SheetDescription>
+                    </SheetHeader>
                     <div className="flex flex-col h-full">
                         <div className="flex items-center gap-2 px-3 py-4 border-b">
                             <Package className="h-6 w-6 text-primary" />
@@ -101,31 +108,35 @@ export function DashboardNav({ pathname }: {
                     </nav>
                     <div className="p-4 border-t">
                         {/* User Info */}
+                        <NavUser
+                            user={{
+                                avatar: session?.user.image!,
+                                email: session?.user.email!,
+                                name: session?.user.name!
+                            }} />
                         <div className="mb-4 text-sm text-muted-foreground">
-                            {session?.user?.name}
-                            {session?.user?.role === "admin" && (
-                                <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
-                                    Admin
+                            {session?.user?.role === "ADMIN" && (
+                                <span className="flex flex-row justify-between ml-2 text-xs px-2 py-0.5 rounded">
+                                    <p>
+                                        Rol:
+                                    </p>
+                                    <p>
+                                        Admin
+                                    </p>
                                 </span>
                             )}
                         </div>
 
-                        {/* Theme Toggle */}
-                        <div className="mb-3">
-                            <ModeToggle />
-                        </div>
-
                         {/* Logout Button */}
-                        <Button
+                        {/*   <Button
                             variant="ghost"
                             className="w-full justify-start gap-3"
                             onClick={handleSignOut}
                         >
                             <LogOut className="h-4 w-4" />
                             Cerrar Sesión
-                        </Button>
+                        </Button> */}
                     </div>
-
                 </div>
             </div>
         </>

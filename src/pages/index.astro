@@ -1,21 +1,31 @@
 ---
-import { actions } from "astro:actions";
+import { actions, isInputError } from "astro:actions";
 import Layout from "@/layouts/Layout.astro";
 import { db } from "@/db";
 import { packages } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { format } from "@formkit/tempo";
-import { Clock, Truck, CheckCircle, XCircle } from "lucide-react";
-
-const trackingNumber = Astro.url.searchParams.get("trackingNumber") || ""; // Default to 'all'
+import {
+	Clock,
+	Truck,
+	CheckCircle,
+	XCircle,
+	type LucideIcon,
+	InfoIcon,
+} from "lucide-react";
+import type { PackageStatus } from "@/lib/validations";
 
 const result = Astro.getActionResult(actions.getPackageStatus);
-const packageData = await db.query.packages.findFirst({
-	where: eq(packages.trackingNumber, trackingNumber),
-});
+const inputErrors = isInputError(result?.error) ? result.error.fields : {};
+
+type StatusConfig = {
+	icon: LucideIcon;
+	color: string;
+	label: string;
+};
 
 // Mapping config (manually included since no runtime TS)
-const statusConfig = {
+const statusConfig: Record<PackageStatus, StatusConfig> = {
 	pending: {
 		icon: Clock,
 		color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
@@ -37,8 +47,6 @@ const statusConfig = {
 		label: "Fallido",
 	},
 };
-
-//console.log(packageData);
 ---
 
 <Layout>
@@ -65,9 +73,9 @@ const statusConfig = {
 					Rastrear Tu Paquete
 				</h2>
 				<form
-					method="GET"
-					action={actions.getPackageStatus}
+					method="POST"
 					class="space-y-4"
+					action={`${actions.getPackageStatus}#package-info`}
 				>
 					<div>
 						<label
@@ -83,6 +91,26 @@ const statusConfig = {
 							placeholder="Introduce el número de seguimiento (ej. PKG001234567)"
 							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 						/>
+						{
+							inputErrors.trackingNumber && (
+								<div class="pt-2">
+									<div
+										class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+										role="alert"
+									>
+										<div>
+											<InfoIcon className="size-4 mr-1" />
+										</div>
+										<div>
+											<span class="font-medium">
+												Numero de Seguimiento!
+											</span>{" "}
+											requerido
+										</div>
+									</div>
+								</div>
+							)
+						}
 					</div>
 					<button
 						type="submit"
@@ -96,26 +124,31 @@ const statusConfig = {
 
 		<!-- Result Card -->
 		{
-			packageData
+			result?.data
 				? (() => {
-						const pkg = packageData;
+						const pkg = result.data.package;
 						const status =
-							statusConfig[pkg.status] ?? statusConfig["pending"];
+							statusConfig[pkg.status as PackageStatus] ??
+							statusConfig["pending"];
 						const Icon = status.icon;
 
 						return (
-							<div class="max-w-4xl mx-auto">
+							<div id="package-info" class="max-w-4xl mx-auto">
 								<div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-6 space-y-4">
 									<div class="flex items-center space-x-4">
 										<div
 											class={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${status.color}`}
 										>
-											<Icon class="w-4 h-4 mr-1" />
+											<Icon className="w-4 h-4 mr-1" />
 											{status.label}
 										</div>
 										<span class="text-sm text-gray-500 dark:text-gray-400">
 											Última actualización:{" "}
-											{format(pkg.updatedAt, "full")}
+											{format(
+												pkg.updatedAt,
+												"full",
+												"es",
+											)}
 										</span>
 									</div>
 

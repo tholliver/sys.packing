@@ -20,25 +20,24 @@ export const server = {
                 )
 
                 if (!packageData) {
-                    throw new ActionError({
+                    return null
+                    /* throw new ActionError({
                         code: 'NOT_FOUND',
                         message: 'Package not found with this tracking number',
-                    });
+                    }); */
                 }
-
-                const packageInfo = packageData;
 
                 // Get package history
                 const history = await db
                     .select()
                     .from(packageHistory)
-                    .where(eq(packageHistory.packageId, packageInfo.id))
+                    .where(eq(packageHistory.packageId, packageData.id))
                     .orderBy(packageHistory.createdAt);
 
-                console.log(packageInfo);
+                console.log(packageData);
 
                 return {
-                    package: packageInfo,
+                    package: packageData,
                     history,
                 };
             } catch (error) {

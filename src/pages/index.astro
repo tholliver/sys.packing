@@ -1,22 +1,16 @@
 ---
 import { actions, isInputError } from "astro:actions";
 import Layout from "@/layouts/Layout.astro";
-import { db } from "@/db";
-import { packages } from "@/db/schema";
-import { eq } from "drizzle-orm";
 import { format } from "@formkit/tempo";
 import {
 	Clock,
 	Truck,
 	CheckCircle,
 	XCircle,
-	type LucideIcon,
 	InfoIcon,
+	type LucideIcon,
 } from "lucide-react";
 import type { PackageStatus } from "@/lib/validations";
-
-const result = Astro.getActionResult(actions.getPackageStatus);
-const inputErrors = isInputError(result?.error) ? result.error.fields : {};
 
 type StatusConfig = {
 	icon: LucideIcon;
@@ -47,6 +41,9 @@ const statusConfig: Record<PackageStatus, StatusConfig> = {
 		label: "Fallido",
 	},
 };
+
+const result = Astro.getActionResult(actions.getPackageStatus);
+const inputErrors = isInputError(result?.error) ? result.error.fields : {};
 ---
 
 <Layout>
@@ -75,7 +72,7 @@ const statusConfig: Record<PackageStatus, StatusConfig> = {
 				<form
 					method="POST"
 					class="space-y-4"
-					action={`${actions.getPackageStatus}#package-info`}
+					action={actions.getPackageStatus}
 				>
 					<div>
 						<label
@@ -126,7 +123,7 @@ const statusConfig: Record<PackageStatus, StatusConfig> = {
 		{
 			result?.data
 				? (() => {
-						const pkg = result.data.package;
+						const pkg = result?.data.package;
 						const status =
 							statusConfig[pkg.status as PackageStatus] ??
 							statusConfig["pending"];

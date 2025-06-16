@@ -3,7 +3,11 @@ import DashboardLayout from "@/layouts/DashboardLayout.astro";
 import { getSession } from "@/auth/dal";
 import Layout from "@/layouts/Layout.astro";
 import DashboardPage from "@/components/react/dashboard-page";
-import { getGeneralStats, getRecentPackages } from "@/db/queries";
+import {
+    getGeneralStats,
+    getRecentPackagesByOffice,
+    type DashboardStats,
+} from "@/db/queries";
 
 const session = await getSession(Astro.request);
 /* const session = () => {
@@ -19,8 +23,9 @@ if (!session) {
     return Astro.redirect("/signin");
 }
 
-const stats = await getGeneralStats();
-const recentPackages = await getRecentPackages(session?.user.id!);
+const period = Astro.url.searchParams.get("period") || "all"; // Default to 'all'
+const stats = await getGeneralStats(period);
+const recentPackages = await getRecentPackagesByOffice();
 ---
 
 <DashboardLayout>
@@ -28,6 +33,7 @@ const recentPackages = await getRecentPackages(session?.user.id!);
         stats={stats}
         recentPackages={recentPackages}
         session={session!}
+        isAdmin={session.user.role === "ADMIN"}
         client:load
     />
 </DashboardLayout>

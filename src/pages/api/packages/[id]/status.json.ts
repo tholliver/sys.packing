@@ -6,11 +6,13 @@ import { eq, sql, and, or } from "drizzle-orm"
 import { packageHistory, packages } from "@/db/schema"
 import { auth } from "@/auth"
 
-export const PATCH: APIRoute = async ({ request, params }) => {
+export const POST: APIRoute = async ({ request, params }) => {
     try {
         //const session = await requireAuth()
         const session = await auth.api.getSession({ headers: request.headers, })
         const body = await request.json()
+        console.log("Here--------------------", body);
+
         const validatedData = updatePackageStatusSchema.parse(body)
 
         if (!session)
@@ -27,13 +29,12 @@ export const PATCH: APIRoute = async ({ request, params }) => {
         // Check if package exists and user has permission
         const packageToUpdate = await db.select().from(packages)
             .where(
-                and(
-                    eq(packages.id, params.id!),
-                    or(
-                        eq(packages.senderId, session.user.id),
-                        eq(packages.recipientId, session.user.id),
-                    )
-                )
+                eq(packages.id, params.id!),
+                /* or(
+                    eq(packages.senderId, session.user.id),
+                    eq(packages.recipientId, session.user.id),
+                ) */
+
             );
 
         if (
@@ -64,7 +65,10 @@ export const PATCH: APIRoute = async ({ request, params }) => {
         })
 
         return new Response(
-            JSON.stringify(updatedPackages[0]),
+            JSON.stringify({
+                data: updatedPackages[0],
+                success: true
+            }),
             {
                 status: 200,
                 headers: {

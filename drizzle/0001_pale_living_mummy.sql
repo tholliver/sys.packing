@@ -1,0 +1,1 @@
+ALTER TABLE "packages" ALTER COLUMN "weight" SET DEFAULT '1';

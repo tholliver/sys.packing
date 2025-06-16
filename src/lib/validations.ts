@@ -40,7 +40,7 @@ export const packageSchema = z.object({
 export type PackageFormData = z.infer<typeof packageSchema>
 
 export const updatePackageStatusSchema = z.object({
-    status: z.enum(["pending", "in_transit", "delivered", "failed"]),
+    status: z.enum(PackageStatuses),
     notes: z.string().max(200, "Las notas son demasiado largas").optional(),
 })
 

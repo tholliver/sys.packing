@@ -1,7 +1,7 @@
 import { alias } from 'drizzle-orm/pg-core'
 import { db } from './index'
 import { packages, user, type Package } from './schema'
-import { eq, or, and, count, desc, sql, sum, getTableColumns } from 'drizzle-orm'
+import { eq, or, and, count, desc, sql, sum, getTableColumns, gte } from 'drizzle-orm'
 
 // Type definitions
 interface DashboardStats {
@@ -48,33 +48,69 @@ export async function getAdminStats() {
     }
 }
 
+function getDateFilter(period: string): Date | null {
+    const now = new Date();
 
-export async function getGeneralStats() {
+    switch (period) {
+        case 'day':
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        case 'week':
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
+            weekStart.setHours(0, 0, 0, 0);
+            return weekStart;
+        case 'month':
+            return new Date(now.getFullYear(), now.getMonth(), 1);
+        case 'year':
+            return new Date(now.getFullYear(), 0, 1);
+        default:
+            return null; // No filter for 'all'
+    }
+}
+
+export async function getGeneralStats(period: string = 'all') {
+    // Calculate date filter based on period
+    const dateFilter = getDateFilter(period);
+
     const [totalPackages] = await db
         .select({ count: count() })
-        .from(packages);
+        .from(packages)
+        .where(dateFilter ? gte(packages.createdAt, dateFilter) : undefined);
 
     const [deliveredPackages] = await db
         .select({ count: count() })
         .from(packages)
-        .where(eq(packages.status, 'delivered'));
+        .where(
+            dateFilter
+                ? and(eq(packages.status, 'delivered'), gte(packages.createdAt, dateFilter))
+                : eq(packages.status, 'delivered')
+        );
 
     const [pendingPackages] = await db
         .select({ count: count() })
         .from(packages)
-        .where(eq(packages.status, 'pending'));
+        .where(
+            dateFilter
+                ? and(eq(packages.status, 'pending'), gte(packages.createdAt, dateFilter))
+                : eq(packages.status, 'pending')
+        );
 
     const [inTransitPackages] = await db
         .select({ count: count() })
         .from(packages)
-        .where(eq(packages.status, 'in_transit'));
+        .where(
+            dateFilter
+                ? and(eq(packages.status, 'in_transit'), gte(packages.createdAt, dateFilter))
+                : eq(packages.status, 'in_transit')
+        );
 
     const [totalRevenue] = await db
         .select({
             total: sum(packages.totalCost),
             paid: sum(sql`CASE WHEN ${packages.isPaid} THEN ${packages.totalCost} ELSE 0 END`)
         })
-        .from(packages);
+        .from(packages)
+        .where(dateFilter ? gte(packages.createdAt, dateFilter) : undefined);
 
     return {
         totalPackages: totalPackages.count,
@@ -88,13 +124,28 @@ export async function getGeneralStats() {
     };
 }
 
-async function getRecentPackages(userId: string): Promise<Package[]> {
+async function getRecentPackagesByUser(userId: string): Promise<Package[]> {
     try {
         const recentPackages = await db
             .select({ ...getTableColumns(packages) })
             .from(packages)
             .leftJoin(user, eq(packages.createdBy, user.id))
             .where(eq(packages.createdBy, userId))
+            .orderBy(desc(packages.createdAt))
+            .limit(5)
+
+        return recentPackages
+    } catch (error) {
+        console.error('Error fetching recent packages:', error)
+        throw new Error('Failed to fetch recent packages')
+    }
+}
+
+async function getRecentPackagesByOffice(): Promise<Package[]> {
+    try {
+        const recentPackages = await db
+            .select()
+            .from(packages)
             .orderBy(desc(packages.createdAt))
             .limit(5)
 
@@ -185,7 +236,8 @@ async function getRecentPackages(userId: string): Promise<Package[]> {
 
 export {
     // getDashboardStats,
-    getRecentPackages,
+    getRecentPackagesByUser,
+    getRecentPackagesByOffice,
     // getRecentPackagesAlt,
     // getDashboardStatsOptimized,
     type DashboardStats,

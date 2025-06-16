@@ -3,13 +3,18 @@ import { toast } from 'sonner'
 import { useMemo, useCallback, useState } from 'react'
 
 // Types
+type EndpointFunction = (id: string | number) => string;
+type Endpoint = string | EndpointFunction;
+
+interface Pagination {
+    totalPages: number
+    currentPage: number
+    total: number
+}
+
 interface PaginatedResponse<T> {
     data: T[]
-    pagination: {
-        totalPages: number
-        currentPage: number
-        total: number
-    }
+    pagination: Pagination
 }
 
 interface UseDataFetchParams {
@@ -20,7 +25,7 @@ interface UseDataFetchParams {
 
 interface UseDataFetchReturn<T> {
     data: T[]
-    totalPages: number
+    pagination: Pagination | undefined
     isLoading: boolean
     error: string | null
     refetch: () => Promise<PaginatedResponse<T> | undefined>
@@ -31,7 +36,7 @@ interface UseDataFetchReturn<T> {
 }
 
 interface UseMutationParams {
-    endpoint?: string // Now optional
+    endpoint: Endpoint
     method?: 'POST' | 'PUT' | 'DELETE'
     onSuccess?: (data: any) => void
     onError?: (error: Error) => void
@@ -216,7 +221,7 @@ export const useDataFetch = <T>({
 
     return {
         data: data?.data ?? [],
-        totalPages: data?.pagination?.totalPages ?? 0,
+        pagination: data?.pagination,
         isLoading: isLoading,
         error: error?.message ?? null,
         refetch: mutate,
@@ -226,6 +231,27 @@ export const useDataFetch = <T>({
         clearFilters,
     }
 }
+
+const resolveEndpointUrl = (
+    endpoint: Endpoint,
+    id?: string,
+    customEndpoint?: string
+): string => {
+    // Priority: customEndpoint > function endpoint > static endpoint
+    if (customEndpoint) {
+        return customEndpoint;
+    }
+
+    if (typeof endpoint === 'function') {
+        if (!id) {
+            throw new Error('ID is required for function endpoints');
+        }
+        return endpoint(id);
+    }
+
+    // Static endpoint - append id if provided
+    return id ? `${endpoint}/${id}` : endpoint;
+};
 
 // Generic mutation hook - now more flexible with optional endpoint
 export const useMutation = ({
@@ -248,7 +274,7 @@ export const useMutation = ({
                 throw new Error('No endpoint provided')
             }
 
-            const url = id ? `${baseEndpoint}/${id}` : baseEndpoint
+            const url = resolveEndpointUrl(endpoint, id, customEndpoint);
             const options: RequestInit = {
                 method,
                 headers: {
@@ -305,9 +331,9 @@ export const useMutation = ({
 }
 
 // Flexible mutation hooks - can be used without predefined endpoints
-export const useGenericMutation = (method: 'POST' | 'PUT' | 'DELETE' = 'POST') => {
+/* export const useGenericMutation = (method: 'POST' | 'PUT' | 'DELETE' = 'POST') => {
     return useMutation({ method })
-}
+} */
 
 // Specialized hooks for common use cases
 export const usePackages = (defaultFilters = {}) => {
@@ -337,7 +363,7 @@ export const useAdminPackages = (defaultFilters = {}) => {
 }
 
 // Flexible package mutations - endpoints can be provided at runtime
-export const usePackageMutations = () => {
+/* export const usePackageMutations = () => {
     const create = useGenericMutation('POST')
     const update = useGenericMutation('PUT')
     const remove = useGenericMutation('DELETE')
@@ -383,4 +409,4 @@ export const useFlexibleMutations = () => {
         updateProduct,
         uploadFile,
     }
-}
+} */

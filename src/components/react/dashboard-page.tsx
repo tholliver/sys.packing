@@ -1,57 +1,63 @@
 //import { verifySession } from "@/auth/dal"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Package, Send, Inbox, Clock } from "lucide-react"
+import { Package, Send, Inbox, Clock, DollarSign, CheckCircle, Italic, CalendarCheck, CalendarFold } from "lucide-react"
 import { type DashboardStats, type RecentPackage } from "@/db/queries"
 import type { Session } from "@/auth/auth-client"
-import { statusLabels, type Status } from "@/types"
+import { statusLabels } from "@/types"
 import type { Package as PackageModel } from "@/db/schema"
 import { format } from "@formkit/tempo"
+import type { PackageStatus } from "@/lib/validations"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select"
+import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 
 interface DashboardPageProps {
     session: Session
     recentPackages: PackageModel[]
     stats: DashboardStats
+    isAdmin?: boolean
 }
 
-export default function DashboardPage({ session, stats, recentPackages }: DashboardPageProps) {
-    const statCards = [
+export default function DashboardPage({ session, stats, recentPackages, isAdmin = false }: DashboardPageProps) {
+    const allStats = [
         {
             title: "Paquetes Enviados",
             value: stats.totalPackages,
             icon: Send,
-            description: "Total de paquetes enviados",
+            description: "Total de envíos realizados",
         },
         {
             title: "Paquetes Recibidos",
             value: stats.deliveredPackages,
             icon: Inbox,
-            description: "Total de paquetes recibidos",
+            description: "Total de entregas completadas",
         },
         {
             title: "Pendientes",
             value: stats.pendingPackages,
             icon: Clock,
-            description: "Esperando procesamiento",
+            description: "Paquetes sin procesar aún",
         },
         {
             title: "En Tránsito",
             value: stats.inTransitPackages,
             icon: Package,
-            description: "Actualmente en envío",
+            description: "Paquetes en movimiento",
         },
         {
-            title: "Total recaudado",
+            title: "Total a Recaudar",
             value: stats.totalRevenue,
-            icon: Package,
-            description: "",
+            icon: DollarSign,
+            description: "Ingresos aún por cobrar",
         },
         {
-            title: "Total recaudado (pagado)",
+            title: "Total Recaudado",
             value: stats.paidRevenue,
-            icon: Package,
-            description: "",
+            icon: CheckCircle,
+            description: "Pagos recibidos completos",
         },
-    ]
+    ];
+
+    const statCards = isAdmin ? allStats : []
 
     return (
         <div className="space-y-8">
@@ -61,22 +67,58 @@ export default function DashboardPage({ session, stats, recentPackages }: Dashbo
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {statCards.map((stat) => {
-                    const Icon = stat.icon
-                    return (
-                        <Card key={stat.title}>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                                <Icon className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{stat.value}</div>
-                                <p className="text-xs text-muted-foreground">{stat.description}</p>
-                            </CardContent>
-                        </Card>
-                    )
-                })}
+            <div>
+                <div className="pb-3">
+                    <ToggleGroup type="single" variant="outline">
+                        <a href="/dashboard">
+                            <ToggleGroupItem value="bold" aria-label="Toggle bold">
+                                <Clock className="h-4 w-4" />
+                                Todos
+                            </ToggleGroupItem>
+                        </a>
+                        <a href="/dashboard?period=day">
+                            <ToggleGroupItem value="italic" aria-label="Toggle italic">
+                                <CalendarFold className="h-4 w-4" />
+                                Hoy
+                            </ToggleGroupItem>
+                        </a>
+                        <a href="/dashboard?period=week">
+                            <ToggleGroupItem value="bold" aria-label="Toggle bold">
+                                <Clock className="h-4 w-4" />
+                                Semanal
+                            </ToggleGroupItem>
+                        </a>
+                        <a href="/dashboard?period=month">
+                            <ToggleGroupItem value="italic" aria-label="Toggle italic">
+                                <CalendarFold className="h-4 w-4" />
+                                Mensual
+                            </ToggleGroupItem>
+                        </a>
+                        <a href="/dashboard?period=year">
+                            <ToggleGroupItem value="strikethrough" aria-label="Toggle strikethrough">
+                                <CalendarCheck className="h-4 w-4" />
+                                Anual
+                            </ToggleGroupItem>
+                        </a>
+                    </ToggleGroup>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {statCards.map((stat) => {
+                        const Icon = stat.icon
+                        return (
+                            <Card key={stat.title}>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                                    <Icon className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{stat.value}</div>
+                                    <p className="text-xs text-muted-foreground">{stat.description}</p>
+                                </CardContent>
+                            </Card>
+                        )
+                    })}
+                </div>
             </div>
 
             {/* Recent Packages */}
@@ -107,7 +149,7 @@ export default function DashboardPage({ session, stats, recentPackages }: Dashbo
                                                     : "bg-red-100 text-red-800"
                                             }`}
                                     >
-                                        {statusLabels[pkg.status as Status]}
+                                        {statusLabels[pkg.status as PackageStatus]}
                                     </span>
                                     <p className="text-xs text-muted-foreground mt-1">{format(pkg.createdAt, "short")}</p>
                                 </div>

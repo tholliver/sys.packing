@@ -18,15 +18,13 @@ import { toast } from "sonner"
 import { useDataFetch } from "@/hooks/useDataFetch"
 import type { Package as PackageModel } from "@/db/schema"
 import { apiEndpoints } from "@/utils"
-import type { Status } from "@/types"
+import type { PackageStatus } from "@/types"
 
 interface PackageListProps {
     type: "sent" | "received" | "all"
     userId: string
     isAdmin?: boolean
 }
-
-type PackageStatus = 'pending' | 'in_transit' | 'delivered' | 'failed';
 
 const statusConfig: Record<PackageStatus, {
     icon: React.ComponentType<any>;

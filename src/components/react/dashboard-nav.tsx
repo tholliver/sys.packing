@@ -22,20 +22,6 @@ export function DashboardNav({ pathname }: {
     const [isOpen, setIsOpen] = useState(false)
     const { data: session } = useSession()
 
-    const handleSignOut = async () => {
-        try {
-            await signOut()
-            toast("Sesión cerrada", {
-                description: "Has cerrado sesión correctamente",
-            })
-            window.location.href = "/signin"
-        } catch (error) {
-            toast.error("Error", {
-                description: "Error al cerrar sesión",
-            })
-        }
-    }
-
     const allNavigation = [...navigation, ...(session?.user?.role === "admin" ? adminNavigation : [])]
 
     const NavItems = () => (
@@ -85,13 +71,13 @@ export function DashboardNav({ pathname }: {
                         <nav className="flex-1 space-y-1 p-3">
                             <NavItems />
                         </nav>
-                        <div className="p-3 border-t">
-                            <ModeToggle />
-                            <Button variant="ghost" className="w-full justify-start gap-3" onClick={handleSignOut}>
-                                <LogOut className="h-4 w-4" />
-                                Cerrar Sesión
-                            </Button>
-                        </div>
+                        <ModeToggle />
+                        <NavUser
+                            user={{
+                                avatar: session?.user.image!,
+                                email: session?.user.email!,
+                                name: session?.user.name!
+                            }} />
                     </div>
                 </SheetContent>
             </Sheet>
@@ -126,6 +112,8 @@ export function DashboardNav({ pathname }: {
                                 </span>
                             )}
                         </div>
+                        <ModeToggle />
+
 
                         {/* Logout Button */}
                         {/*   <Button

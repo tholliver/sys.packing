@@ -1,7 +1,6 @@
-import { alias } from 'drizzle-orm/pg-core'
 import { db } from './index'
 import { packages, user, type Package } from './schema'
-import { eq, or, and, count, desc, sql, sum, getTableColumns, gte } from 'drizzle-orm'
+import { eq, and, count, desc, sql, sum, getTableColumns, gte } from 'drizzle-orm'
 
 // Type definitions
 interface DashboardStats {

@@ -1,13 +1,12 @@
 //import { verifySession } from "@/auth/dal"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Package, Send, Inbox, Clock, DollarSign, CheckCircle, Italic, CalendarCheck, CalendarFold } from "lucide-react"
+import { Package, Send, Inbox, Clock, DollarSign, CheckCircle, CalendarCheck, CalendarFold } from "lucide-react"
 import { type DashboardStats, type RecentPackage } from "@/db/queries"
 import type { Session } from "@/auth/auth-client"
 import { statusLabels } from "@/types"
 import type { Package as PackageModel } from "@/db/schema"
 import { format } from "@formkit/tempo"
 import type { PackageStatus } from "@/lib/validations"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select"
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group"
 
 interface DashboardPageProps {

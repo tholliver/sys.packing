@@ -1,5 +1,5 @@
-import { drizzle as localPostgreSQL } from 'drizzle-orm/postgres-js';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { drizzle as localPostgreSQL } from 'drizzle-orm/node-postgres';
+import { drizzle } from 'drizzle-orm/node-postgres';
 
 import * as schema from './schema'
 

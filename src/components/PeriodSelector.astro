@@ -1,0 +1,51 @@
+---
+// PeriodSelector.astro
+const currentUrl = Astro.url;
+const period = currentUrl.searchParams.get("period") || "all";
+---
+
+<div class="flex gap-1 p-2 bg-black rounded-lg w-fit">
+    <a
+        href="?period=day"
+        class={`flex items-center justify-center px-3 h-8 text-sm font-medium transition-all duration-200 rounded select-none ${
+            period === "day"
+                ? "bg-gray-700 text-white"
+                : "text-gray-400 hover:text-white hover:bg-gray-800"
+        }`}
+    >
+        Hoy
+    </a>
+
+    <a
+        href="?period=week"
+        class={`flex items-center justify-center px-3 h-8 text-sm font-medium transition-all duration-200 rounded select-none ${
+            period === "week"
+                ? "bg-gray-700 text-white"
+                : "text-gray-400 hover:text-white hover:bg-gray-800"
+        }`}
+    >
+        Semana
+    </a>
+
+    <a
+        href="?period=month"
+        class={`flex items-center justify-center px-3 h-8 text-sm font-medium transition-all duration-200 rounded select-none ${
+            period === "month"
+                ? "bg-gray-700 text-white"
+                : "text-gray-400 hover:text-white hover:bg-gray-800"
+        }`}
+    >
+        Mes
+    </a>
+
+    <a
+        href="?period=year"
+        class={`flex items-center justify-center px-3 h-8 text-sm font-medium transition-all duration-200 rounded select-none ${
+            period === "year"
+                ? "bg-gray-700 text-white"
+                : "text-gray-400 hover:text-white hover:bg-gray-800"
+        }`}
+    >
+        Año
+    </a>
+</div>

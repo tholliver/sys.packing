@@ -1,8 +1,7 @@
 import type { APIRoute } from "astro"
-import { requireAuth } from "@/auth/dal"
 import { db } from "@/db"
 import { updatePackageStatusSchema } from "@/lib/validations"
-import { eq, sql, and, or } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { packageHistory, packages } from "@/db/schema"
 import { auth } from "@/auth"
 

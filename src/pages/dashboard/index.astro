@@ -1,24 +1,35 @@
 ---
 import DashboardLayout from "@/layouts/DashboardLayout.astro";
 import { getSession } from "@/auth/dal";
-import Layout from "@/layouts/Layout.astro";
 import DashboardPage from "@/components/react/dashboard-page";
 import {
     getGeneralStats,
     getRecentPackagesByOffice,
     type DashboardStats,
 } from "@/db/queries";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
+import { statusLabels, type PackageStatus } from "@/types";
+import { format } from "@formkit/tempo";
+import { ToggleGroup, ToggleGroupItem } from "@radix-ui/react-toggle-group";
+import {
+    Clock,
+    CalendarFold,
+    CalendarCheck,
+    Send,
+    Inbox,
+    Package,
+    DollarSign,
+    CheckCircle,
+} from "lucide-react";
+import PeriodSelector from "@/components/PeriodSelector.astro";
 
 const session = await getSession(Astro.request);
-/* const session = () => {
-    if (Astro.locals.session) {
-        return Astro.locals.user;
-    } else {
-        // Redirect to login page if the user is not authenticated
-        return Astro.redirect("/login");
-    }
-};
-*/
 if (!session) {
     return Astro.redirect("/signin");
 }
@@ -26,14 +37,157 @@ if (!session) {
 const period = Astro.url.searchParams.get("period") || "all"; // Default to 'all'
 const stats = await getGeneralStats(period);
 const recentPackages = await getRecentPackagesByOffice();
+
+const allStats = [
+    {
+        title: "Paquetes Enviados",
+        value: stats.totalPackages,
+        icon: Send,
+        description: "Total de envíos realizados",
+    },
+    {
+        title: "Paquetes Recibidos",
+        value: stats.deliveredPackages,
+        icon: Inbox,
+        description: "Total de entregas completadas",
+    },
+    {
+        title: "Pendientes",
+        value: stats.pendingPackages,
+        icon: Clock,
+        description: "Paquetes sin procesar aún",
+    },
+    {
+        title: "En Tránsito",
+        value: stats.inTransitPackages,
+        icon: Package,
+        description: "Paquetes en movimiento",
+    },
+    {
+        title: "Total a Recaudar",
+        value: stats.totalRevenue,
+        icon: DollarSign,
+        description: "Ingresos aún por cobrar",
+    },
+    {
+        title: "Total Recaudado",
+        value: stats.paidRevenue,
+        icon: CheckCircle,
+        description: "Pagos recibidos completos",
+    },
+];
+
+const statCards = session.user.role === "ADMIN" ? allStats : [];
 ---
 
 <DashboardLayout>
-    <DashboardPage
+    <!--   <DashboardPage
         stats={stats}
         recentPackages={recentPackages}
         session={session!}
         isAdmin={session.user.role === "ADMIN"}
         client:load
-    />
+    /> -->
+
+    <div class="space-y-8">
+        <div>
+            <h1 class="text-3xl font-bold">Panel Principal</h1>
+            <p class="text-muted-foreground">
+                Bienvenido de vuelta, {session.user.name}
+            </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div>
+            <div class="pb-3">
+                <PeriodSelector />
+            </div>
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {
+                    statCards.map((stat) => {
+                        const Icon = stat.icon;
+                        return (
+                            <Card key={stat.title}>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">
+                                        {stat.title}
+                                    </CardTitle>
+                                    <Icon className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div class="text-2xl font-bold">
+                                        {stat.value}
+                                    </div>
+                                    <p class="text-xs text-muted-foreground">
+                                        {stat.description}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        );
+                    })
+                }
+            </div>
+        </div>
+
+        {/* Recent Packages */}
+        <Card>
+            <CardHeader>
+                <CardTitle>Paquetes Recientes</CardTitle>
+                <CardDescription
+                    >Tus últimas actividades de paquetes</CardDescription
+                >
+            </CardHeader>
+            <CardContent>
+                <div class="space-y-4">
+                    {
+                        recentPackages.map((pkg) => (
+                            <div class="flex items-center justify-between p-4 border rounded-lg">
+                                <div class="space-y-1">
+                                    <p class="font-medium">
+                                        {pkg.description?.slice(10)}
+                                    </p>
+                                    <p class="text-sm text-muted-foreground">
+                                        {`Para: ${pkg.recipientFullName} - De: ${pkg.senderFullName}`}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">
+                                        {pkg.trackingNumber}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <span
+                                        class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                            pkg.status === "delivered"
+                                                ? "bg-green-100 text-green-800"
+                                                : pkg.status === "in_transit"
+                                                  ? "bg-blue-100 text-blue-800"
+                                                  : pkg.status === "pending"
+                                                    ? "bg-yellow-100 text-yellow-800"
+                                                    : "bg-red-100 text-red-800"
+                                        }`}
+                                    >
+                                        {
+                                            statusLabels[
+                                                pkg.status as PackageStatus
+                                            ]
+                                        }
+                                    </span>
+                                    <p class="text-xs text-muted-foreground mt-1">
+                                        {format(pkg.createdAt, "short")}
+                                    </p>
+                                </div>
+                            </div>
+                        ))
+                    }
+                    {
+                        recentPackages.length === 0 && (
+                            <p class="text-center text-muted-foreground py-8">
+                                Aún no tienes paquetes. ¡Comienza enviando tu
+                                primer paquete!
+                            </p>
+                        )
+                    }
+                </div>
+            </CardContent>
+        </Card>
+    </div>
 </DashboardLayout>

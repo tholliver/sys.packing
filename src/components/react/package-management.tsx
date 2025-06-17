@@ -75,6 +75,9 @@ function PackageManagementContent() {
     const [currentPage, setCurrentPage] = useState(1)
     const [pageSize] = useState(10)
 
+    console.log(packages);
+
+
     // Debounced search
     const [searchInput, setSearchInput] = useState("")
     useEffect(() => {

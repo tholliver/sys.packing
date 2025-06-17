@@ -50,13 +50,13 @@ interface UseMutationReturn {
 
 // Optimized SWR config for minimal requests
 const swrConfig: SWRConfiguration = {
-    dedupingInterval: 600000, // 10 minutes
+    /* dedupingInterval: 600000, // 10 minutes
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
     revalidateIfStale: false,
     refreshInterval: 0,
     errorRetryCount: 1,
-    errorRetryInterval: 2000,
+    errorRetryInterval: 2000, */
 }
 
 // Generic fetcher

@@ -4,10 +4,11 @@ import type { APIRoute } from "astro";
 export const GET: APIRoute = async ({ url, params, request }) => {
     try {
         const page = parseInt(url.searchParams.get('page') || '1', 10);
+        const status = url.searchParams.get('status') || 'all';
         const limit = parseInt(url.searchParams.get('limit') || '10', 10);
         //const adminStats = await getAdminStats()
         const offset = (page - 1) * limit;
-        const packages = await getRecentPackagesByOffice()
+        const packages = await getRecentPackagesByOffice(status, limit, offset)
         const total = packages.length;
         const totalPages = Math.ceil(total / limit);
 

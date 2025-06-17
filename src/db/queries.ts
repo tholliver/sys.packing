@@ -140,13 +140,27 @@ async function getRecentPackagesByUser(userId: string): Promise<Package[]> {
     }
 }
 
-async function getRecentPackagesByOffice(): Promise<Package[]> {
+async function getRecentPackagesByOffice(
+    status: string,
+    limit: number,
+    offset: number): Promise<Package[]> {
     try {
+        const conditions = [];
+
+        // Only add status condition if not 'all'
+        if (status !== 'all') {
+            conditions.push(eq(packages.status, status));
+        }
+
         const recentPackages = await db
             .select()
             .from(packages)
+            .where(conditions.length > 0 ? and(...conditions) : undefined)
             .orderBy(desc(packages.createdAt))
-            .limit(5)
+            .limit(limit)
+            .offset(offset);
+
+        return recentPackages;
 
         return recentPackages
     } catch (error) {

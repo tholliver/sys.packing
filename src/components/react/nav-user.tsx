@@ -24,6 +24,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "../ui/button"
+import { authClient } from "@/auth/auth-client"
 /* import {
     SidebarMenu,
     SidebarMenuButton,
@@ -63,7 +64,8 @@ export function NavUser({
             </DropdownMenuTrigger>
             <DropdownMenuContent
                 className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                side={isMobile ? "bottom" : "right"}
+                /*side={isMobile ? "bottom" : "right"} */
+                side="bottom"
                 align="end"
                 sideOffset={4}
             >
@@ -103,8 +105,16 @@ export function NavUser({
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                    <LogOut />
-                    Log out
+                    <button className="flex flex-row justify-center items-center gap-2" onClick={async () => await authClient.signOut({
+                        fetchOptions: {
+                            onSuccess: () => {
+                                window.location.href = "/signin"
+                            }
+                        }
+                    })}>
+                        <LogOut />
+                        Log out
+                    </button>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

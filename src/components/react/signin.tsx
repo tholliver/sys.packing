@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { signIn } from "@/auth/auth-client"
-import { Package, ServerCrash, X } from "lucide-react"
+import { Check, Package, ServerCrash, X } from "lucide-react"
 import { toast } from "sonner"
 
 export default function SignInPage() {
@@ -31,13 +31,14 @@ export default function SignInPage() {
                 })
             } else {
                 toast.success("Success", {
-                    description: "Account created successfully",
+                    description: "Has iniciado sesión correctamente",
+                    icon: < Check />
                 })
                 window.location.href = "/dashboard"
             }
         } catch (error) {
             toast.error("Error", {
-                description: "An unexpected error occurred",
+                description: "Ocurrió un error inesperado",
                 icon: <ServerCrash />
             })
         } finally {
